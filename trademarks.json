@@ -1,0 +1,57 @@
+[
+  {
+    "id": 1,
+    "name": "DR. GREENTHUMB",
+    "jurisdiction": "Federal (USPTO)",
+    "filing_date": "2015-03-15",
+    "renewal_date": "2026-01-15",
+    "status": "active",
+    "registration_number": "5234567",
+    "notes": "Primary brand - federal protection",
+    "created": "2025-11-15T12:00:00"
+  },
+  {
+    "id": 2,
+    "name": "DR. GREENTHUMB",
+    "jurisdiction": "California",
+    "filing_date": "2016-05-20",
+    "renewal_date": "2026-05-20",
+    "status": "active",
+    "registration_number": "CA-123456",
+    "notes": "California state filing",
+    "created": "2025-11-15T12:00:00"
+  },
+  {
+    "id": 3,
+    "name": "DR. GREENTHUMB",
+    "jurisdiction": "Arizona",
+    "filing_date": null,
+    "renewal_date": "2026-02-01",
+    "status": "pending",
+    "registration_number": null,
+    "notes": "URGENT: Not yet filed - $3,900 cost - Operating without protection!",
+    "created": "2025-11-15T12:00:00"
+  },
+  {
+    "id": 4,
+    "name": "DR. GREENTHUMB",
+    "jurisdiction": "Illinois",
+    "filing_date": null,
+    "renewal_date": "2026-02-01",
+    "status": "pending",
+    "registration_number": null,
+    "notes": "URGENT: Not yet filed - $3,900 cost - Operating without protection!",
+    "created": "2025-11-15T12:00:00"
+  },
+  {
+    "id": 5,
+    "name": "GREENTHUMB LABS",
+    "jurisdiction": "Federal (USPTO)",
+    "filing_date": "2018-09-10",
+    "renewal_date": "2025-12-01",
+    "status": "active",
+    "registration_number": "5678901",
+    "notes": "ALERT: Renewal due in less than 30 days!",
+    "created": "2025-11-15T12:00:00"
+  }
+]

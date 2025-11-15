@@ -1,0 +1,35 @@
+name: Weekly Portfolio Report
+
+on:
+  schedule:
+    - cron: '0 9 * * 1'  # Monday 9am UTC
+  workflow_dispatch:
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Generate report
+      run: python tracker.py --report | tee report.txt
+    
+    - name: Create report issue
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const fs = require('fs');
+          const report = fs.readFileSync('report.txt', 'utf8');
+          const date = new Date().toISOString().split('T')[0];
+          
+          await github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: `📊 Weekly Trademark Report - ${date}`,
+            body: `## Dr. Greenthumb Trademark Portfolio\n\n### Weekly Status\n\n\`\`\`\n${report}\n\`\`\`\n\n**Action Items:**\n- [ ] Review upcoming renewals\n- [ ] Process pending filings (AZ/IL)\n- [ ] Update jurisdiction coverage\n\n**Distribution:** Legal Team, B-Real, Business Development`,
+            labels: ['report', 'weekly']
+          });

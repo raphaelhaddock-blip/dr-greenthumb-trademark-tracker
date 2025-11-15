@@ -1,0 +1,40 @@
+name: Daily Trademark Check
+
+on:
+  schedule:
+    - cron: '0 9 * * *'  # 9am UTC daily
+  workflow_dispatch:
+
+jobs:
+  check-renewals:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Check upcoming renewals
+      id: check
+      run: |
+        echo "Checking for upcoming trademark renewals..."
+        python tracker.py --upcoming 30 | tee renewals.txt
+        COUNT=$(python tracker.py --upcoming 30 | wc -l)
+        echo "count=$COUNT" >> $GITHUB_OUTPUT
+    
+    - name: Create alert if renewals due
+      if: steps.check.outputs.count > '0'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const fs = require('fs');
+          const renewals = fs.readFileSync('renewals.txt', 'utf8');
+          
+          await github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: '🔴 URGENT: Trademark Renewals Due Within 30 Days',
+            body: `## ⚠️ Action Required\n\nTrademarks requiring renewal:\n\n\`\`\`\n${renewals}\n\`\`\`\n\n**Next Steps:**\n- [ ] Review renewal requirements\n- [ ] Prepare filing documents\n- [ ] Budget for renewal fees\n- [ ] Submit to trademark office\n\n**Assigned:** Legal Team`,
+            labels: ['urgent', 'trademark', 'renewal']
+          });
