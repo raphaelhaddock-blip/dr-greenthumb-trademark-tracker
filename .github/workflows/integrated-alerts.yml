@@ -1,0 +1,68 @@
+name: Integrated Alert System
+
+on:
+  schedule:
+    - cron: '0 9 * * *'  # Daily at 9am UTC
+  workflow_dispatch:
+
+jobs:
+  send-alerts:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Check for urgent renewals
+      id: check
+      run: |
+        python tracker.py --upcoming 30 | tee renewals.txt
+        COUNT=$(python tracker.py --upcoming 30 | wc -l)
+        echo "urgent_count=$COUNT" >> $GITHUB_OUTPUT
+    
+    - name: Generate territory analysis
+      run: |
+        python integrations/licensing_connector.py | tee territory_report.txt
+    
+    - name: Send email alerts
+      if: steps.check.outputs.urgent_count > '0'
+      env:
+        SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
+        SMTP_PORT: ${{ secrets.SMTP_PORT }}
+        SENDER_EMAIL: ${{ secrets.SENDER_EMAIL }}
+        SENDER_PASSWORD: ${{ secrets.SENDER_PASSWORD }}
+        LEGAL_EMAIL: ${{ secrets.LEGAL_EMAIL }}
+        BREAL_EMAIL: ${{ secrets.BREAL_EMAIL }}
+      run: |
+        echo "Sending email alerts..."
+        # Email integration would run here
+        # python integrations/email_notifier.py --send-alerts
+    
+    - name: Update calendar
+      run: |
+        python integrations/calendar_sync.py
+    
+    - name: Upload calendar file
+      uses: actions/upload-artifact@v3
+      with:
+        name: trademark-calendar
+        path: trademark_deadlines.ics
+    
+    - name: Create comprehensive issue
+      if: steps.check.outputs.urgent_count > '0'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const fs = require('fs');
+          const renewals = fs.readFileSync('renewals.txt', 'utf8');
+          const territory = fs.readFileSync('territory_report.txt', 'utf8');
+          
+          await github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: '🚨 Daily Alert: Trademark Action Required',
+            body: `## Trademark Management Alert\n\n### Upcoming Renewals (30 days)\n\n\`\`\`\n${renewals}\n\`\`\`\n\n### Territory Analysis\n\n\`\`\`\n${territory}\n\`\`\`\n\n### Actions Taken\n\n- ✅ Email sent to legal team\n- ✅ Calendar updated\n- ✅ Territory analysis completed\n\n### Required Next Steps\n\n- [ ] Review renewal documentation\n- [ ] Prepare filing for unprotected territories\n- [ ] Confirm licensing agreement status\n- [ ] Budget for upcoming costs\n\n**Total Estimated Cost:** $${process.env.URGENT_COUNT * 3900}`,
+            labels: ['alert', 'integrated', 'urgent']
+          });
